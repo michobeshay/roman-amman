@@ -64,15 +64,15 @@ def _stone(name, light, dark, moss=True, scale=1.0, brick=(0.9, 0.42), rough=0.8
 _cache = {}
 def get(name):
     if name in _cache: return _cache[name]
-    if name == 'cavea': m = _stone("Cavea_Sandstone", (0.50, 0.35, 0.20, 1), (0.42, 0.29, 0.165, 1), True, 1.0, (0.95, 0.40), tier_highlight=True, theta_stairs=True)
-    elif name == 'wall': m = _stone("Wall_Limestone", (0.56, 0.42, 0.26, 1), (0.47, 0.35, 0.21, 1), True, 1.0, (1.1, 0.5))
+    if name == 'cavea': m = _stone("Cavea_Sandstone", (0.42, 0.29, 0.16, 1), (0.36, 0.25, 0.14, 1), True, 1.0, (0.95, 0.40), tier_highlight=True, theta_stairs=True)
+    elif name == 'wall': m = _stone("Wall_Limestone", (0.46, 0.34, 0.2, 1), (0.39, 0.29, 0.17, 1), True, 1.0, (1.1, 0.5))
     elif name == 'marble': m = _stone("Column_Limestone", (0.66, 0.56, 0.42, 1), (0.58, 0.49, 0.37, 1), True, 3.0, (2.5, 2.5), rough=0.6)
     elif name == 'floor': m = _stone("Orchestra_Paving", (0.58, 0.48, 0.34, 1), (0.46, 0.38, 0.27, 1), True, 1.3, (0.9, 0.9))
     elif name == 'plaster': m = _plaster("Stucco_Ochre")
     elif name == 'wood': m = _wood()
     elif name == 'dark': m = _flat("Door_Bronze", (0.025, 0.02, 0.016, 1), 0.4, 0.8)
     elif name == 'modern': m = _modern()
-    elif name == 'house': m = _stone("House_Stone", (0.55, 0.43, 0.29, 1), (0.50, 0.38, 0.25, 1), True, 0.6, (0.7, 0.35), rough=0.92)
+    elif name == 'house': m = _stone("House_Stone", (0.46, 0.36, 0.24, 1), (0.41, 0.32, 0.21, 1), False, 0.6, (0.7, 0.35), rough=0.92)
     elif name == 'terrain': m = _terrain()
     elif name == 'people': m = _people()
     elif name == 'visitors': m = _people("Visitors")
@@ -120,9 +120,9 @@ def _modern():
     nz = _n(nt, 'ShaderNodeTexNoise', (-900, 400)); nz.inputs['Scale'].default_value = 0.7; nz.inputs['Detail'].default_value = 4; uvn = _n(nt, 'ShaderNodeTexCoord', (-1100, 400)); nt.links.new(uvn.outputs['Object'], nz.inputs['Vector'])
     wallv = _n(nt, 'ShaderNodeMix', (-450, 300), data_type='RGBA'); wallv.inputs[0].default_value = 0.18; wallv.inputs[7].default_value = (0.2, 0.17, 0.12, 1); nt.links.new(col.outputs['Color'], wallv.inputs[6]); nt.links.new(nz.outputs['Fac'], wallv.inputs[0])
     rc = _n(nt, 'ShaderNodeMix', (-250, 300), data_type='RGBA'); rc.inputs[7].default_value = (0.3, 0.29, 0.27, 1); nt.links.new(roof.outputs['Fac'], rc.inputs[0]); nt.links.new(wallv.outputs[2], rc.inputs[6])
-    glass = _n(nt, 'ShaderNodeMix', (0, 200), data_type='RGBA'); glass.inputs[7].default_value = (0.02, 0.035, 0.05, 1); nt.links.new(nowin.outputs[0], glass.inputs[0]); nt.links.new(rc.outputs[2], glass.inputs[6])
-    rg = _n(nt, 'ShaderNodeMath', (0, -100), operation='MULTIPLY'); nt.links.new(nowin.outputs[0], rg.inputs[0]); rg.inputs[1].default_value = -0.55
-    rr = _n(nt, 'ShaderNodeMath', (140, -100), operation='ADD'); rr.inputs[0].default_value = 0.88; nt.links.new(rg.outputs[0], rr.inputs[1])
+    glass = _n(nt, 'ShaderNodeMix', (0, 200), data_type='RGBA'); glass.inputs[7].default_value = (0.012, 0.018, 0.026, 1); nt.links.new(nowin.outputs[0], glass.inputs[0]); nt.links.new(rc.outputs[2], glass.inputs[6])
+    rg = _n(nt, 'ShaderNodeMath', (0, -100), operation='MULTIPLY'); nt.links.new(nowin.outputs[0], rg.inputs[0]); rg.inputs[1].default_value = -0.7
+    rr = _n(nt, 'ShaderNodeMath', (140, -100), operation='ADD'); rr.inputs[0].default_value = 0.9; nt.links.new(rg.outputs[0], rr.inputs[1])
     pb = _n(nt, 'ShaderNodeBsdfPrincipled', (300, 100)); nt.links.new(glass.outputs[2], pb.inputs['Base Color']); nt.links.new(rr.outputs[0], pb.inputs['Roughness'])
     nt.links.new(pb.outputs[0], out.inputs['Surface']); return m
 
@@ -130,11 +130,11 @@ def _terrain():
     m, nt, out = new_mat("Terrain"); tc = _n(nt, 'ShaderNodeTexCoord', (-1400, 0))
     n1 = _n(nt, 'ShaderNodeTexNoise', (-1150, 300), noise_dimensions='3D'); n1.inputs['Scale'].default_value = 0.035; n1.inputs['Detail'].default_value = 7; nt.links.new(tc.outputs['Object'], n1.inputs['Vector'])
     n2 = _n(nt, 'ShaderNodeTexNoise', (-1150, 0), noise_dimensions='3D'); n2.inputs['Scale'].default_value = 1.6; n2.inputs['Detail'].default_value = 8; nt.links.new(tc.outputs['Object'], n2.inputs['Vector'])
-    earth = ramp(nt, [(0.35, (0.30, 0.215, 0.12, 1)), (0.65, (0.42, 0.33, 0.19, 1))], (-900, 300)); nt.links.new(n1.outputs['Fac'], earth.inputs[0])
-    scrub = _n(nt, 'ShaderNodeMix', (-650, 300), data_type='RGBA'); scrub.inputs[7].default_value = (0.13, 0.15, 0.05, 1); nt.links.new(n2.outputs['Fac'], scrub.inputs[0]); nt.links.new(earth.outputs[0], scrub.inputs[6])
+    earth = ramp(nt, [(0.35, (0.2, 0.135, 0.07, 1)), (0.65, (0.31, 0.22, 0.12, 1))], (-900, 300)); nt.links.new(n1.outputs['Fac'], earth.inputs[0])
+    scrub = _n(nt, 'ShaderNodeMix', (-650, 300), data_type='RGBA'); scrub.inputs[7].default_value = (0.17, 0.15, 0.065, 1); nt.links.new(n2.outputs['Fac'], scrub.inputs[0]); nt.links.new(earth.outputs[0], scrub.inputs[6])
     pl = _n(nt, 'ShaderNodeAttribute', (-1150, -300), attribute_name='plaza', attribute_type='GEOMETRY'); rd = _n(nt, 'ShaderNodeAttribute', (-1150, -450), attribute_name='road', attribute_type='GEOMETRY')
     mo = _val(nt, 'Modern', 0.0, (-1150, -600))
-    slab = _n(nt, 'ShaderNodeTexBrick', (-900, -300)); slab.inputs['Scale'].default_value = 0.25; slab.inputs['Mortar Size'].default_value = 0.012; slab.inputs['Color1'].default_value = (0.62, 0.52, 0.38, 1); slab.inputs['Color2'].default_value = (0.55, 0.46, 0.34, 1); slab.inputs['Mortar'].default_value = (0.2, 0.17, 0.13, 1)
+    slab = _n(nt, 'ShaderNodeTexBrick', (-900, -300)); slab.inputs['Scale'].default_value = 0.25; slab.inputs['Mortar Size'].default_value = 0.012; slab.inputs['Color1'].default_value = (0.42, 0.34, 0.24, 1); slab.inputs['Color2'].default_value = (0.37, 0.3, 0.21, 1); slab.inputs['Mortar'].default_value = (0.2, 0.17, 0.13, 1)
     nt.links.new(tc.outputs['Object'], slab.inputs['Vector'])
     p1 = _n(nt, 'ShaderNodeMix', (-450, 100), data_type='RGBA'); nt.links.new(pl.outputs['Fac'], p1.inputs[0]); nt.links.new(scrub.outputs[2], p1.inputs[6]); nt.links.new(slab.outputs['Color'], p1.inputs[7])
     rm = _n(nt, 'ShaderNodeMath', (-700, -500), operation='MULTIPLY'); nt.links.new(rd.outputs['Fac'], rm.inputs[0]); nt.links.new(mo.outputs[0], rm.inputs[1])
@@ -145,11 +145,8 @@ def _terrain():
 
 def _people(name="People"):
     m, nt, out = new_mat(name); col = _n(nt, 'ShaderNodeAttribute', (-600, 0), attribute_name='Col', attribute_type='GEOMETRY')
-    rv = _n(nt, 'ShaderNodeAttribute', (-600, -250), attribute_name='rev', attribute_type='GEOMETRY'); fill = _val(nt, 'Fill', 1.0, (-600, -400))
-    cmp = _n(nt, 'ShaderNodeMath', (-300, -300), operation='LESS_THAN'); nt.links.new(rv.outputs['Fac'], cmp.inputs[0]); nt.links.new(fill.outputs[0], cmp.inputs[1])
     pb = _n(nt, 'ShaderNodeBsdfPrincipled', (-200, 100)); pb.inputs['Roughness'].default_value = 0.75; pb.inputs['Sheen Weight'].default_value = 0.2
-    nt.links.new(col.outputs['Color'], pb.inputs['Base Color']); tr = _n(nt, 'ShaderNodeBsdfTransparent', (-200, -100))
-    mx = _n(nt, 'ShaderNodeMixShader', (80, 0)); nt.links.new(cmp.outputs[0], mx.inputs[0]); nt.links.new(tr.outputs[0], mx.inputs[1]); nt.links.new(pb.outputs[0], mx.inputs[2]); nt.links.new(mx.outputs[0], out.inputs['Surface']); m['fill_node'] = fill.name; return m
+    nt.links.new(col.outputs['Color'], pb.inputs['Base Color']); nt.links.new(pb.outputs[0], out.inputs['Surface']); return m
 
 def _tree():
     m, nt, out = new_mat("Foliage"); col = _n(nt, 'ShaderNodeAttribute', (-600, 0), attribute_name='Col', attribute_type='GEOMETRY'); tc = _n(nt, 'ShaderNodeTexCoord', (-900, 200))

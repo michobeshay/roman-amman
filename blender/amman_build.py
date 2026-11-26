@@ -140,6 +140,15 @@ def build_stage(sc, coll, rng):
     # back wall behind the columns
     for i in range(int((2 * 31) / 3.0)):
         x = -31 + 3.0 * (i + 0.5); put(wall, box((x, -9.9, zp + 4.5), (3.0, 1.3, 9.0)), zp)
+    # postscaenium: the stage building's back wall faces the plaza -> pilasters, blind arcades, central portal (reconstruction)
+    for i in range(int(2 * XM / 3.0)):
+        x = -XM + 3.0 * (i + 0.5); put(wall, box((x, -10.75, zp + 7.2), (0.7, 0.5, 14.4)), zp)
+        if i % 2 == 0:
+            for j in (0, 1):
+                zb = zp + 1.0 + j * 7.4; put(dark, box((x + 1.5, -10.62, zb + 2.7), (1.9, 0.25, 5.4)), zb)
+                put(wall, arch_xz(x + 1.5, zb + 5.4, 0.95, 0.35, -10.9, -10.45, 7), zb + 5.4)
+    put(wall, box((0, -10.8, zp + 14.7), (2 * XM, 1.1, 0.7)), zp + 14.3)
+    put(dark, box((0, -10.6, zp + 3.6), (4.2, 0.3, 7.2)), zp); put(wall, arch_xz(0.0, zp + 7.2, 2.1, 0.6, -10.95, -10.4, 9), zp + 7.2)
     # second order
     z2 = zp + ch + 1.3 + 0.7; ch2 = 4.7
     for i, x in enumerate(cxs[1:-1]):
@@ -225,7 +234,7 @@ def _cloth(rng, tier, kind):
     c = np.array(pal[rng.integers(0, len(pal))]) * rng.uniform(0.85, 1.12); return np.clip(c, 0, 1)
 
 def build_crowd(sc, coll, rng):
-    acc = Acc(floats=['rev', 'sway'], colors=['Col']); spacing = 0.47
+    acc = Acc(floats=['rev', 'sway', 'bz'], colors=['Col']); spacing = 0.40
     nst = lambda ti: 2.6 + 0.4 * ti
     row_i = 0; total = 0
     prof = PROF; seat_rows = []
@@ -242,7 +251,7 @@ def build_crowd(sc, coll, rng):
             th = (s_ + 0.5) / nseat * math.pi
             frac = (th * nst(ti)) % 1.0
             if abs(frac - 0.5) * (1.0 / nst(ti)) * r < 0.72: continue       # leave the radial stairways clear
-            if rng.random() < 0.07: continue
+            if rng.random() < 0.03: continue
             woman = rng.random() < (0.35 if ti > 0 else 0.1); kid = rng.random() < 0.06
             kind = 'child' if kid else ('woman' if woman else 'man')
             V0, F0, G0 = _fig(kind, True)
@@ -254,9 +263,9 @@ def build_crowd(sc, coll, rng):
             hair = np.array([0.04, 0.03, 0.025]) * rng.uniform(0.6, 2.2) if rng.random() > 0.08 else np.array([0.45, 0.43, 0.4])
             colv = np.where((G0 == 0)[:, None], skin, np.where((G0 == 1)[:, None], cloth, hair)); sway = np.where(G0 == 1, 0.7, 1.0) * (np.clip((V0[:, 2] - 0.1) * 1.6, 0, 1))
             rev = (ri / nrows) * 0.82 + rng.uniform(0, 0.18)
-            acc.add(P, F0, rev=rev, sway=sway, Col=np.concatenate([colv, np.ones((len(colv), 1))], 1)); total += 1
+            acc.add(P, F0, rev=rev, bz=z - 0.4, sway=sway, Col=np.concatenate([colv, np.ones((len(colv), 1))], 1)); total += 1
     ob = mesh_obj(sc, "Crowd_6000", acc, M.get('people'), coll)
-    lib.add_wind(ob, 0.035, 1.1); ob['seats'] = total; return ob
+    lib.add_wind(ob, 0.035, 1.1); GN.add_mod(ob, GN.grow_group(), 'Grow', T=0.0); ob['seats'] = total; return ob
 
 def figure_object(sc, name, kind, cloth, skin, hair=(0.04, 0.03, 0.025), mask=None, coll=None, scale=1.0):
     V0, F0, G0 = _fig(kind, False); acc = Acc(floats=['rev', 'sway'], colors=['Col'])
@@ -265,7 +274,7 @@ def figure_object(sc, name, kind, cloth, skin, hair=(0.04, 0.03, 0.025), mask=No
     return mesh_obj(sc, name, acc, M.get('people'), coll)
 
 def build_visitors(sc, coll, rng, n=170):
-    acc = Acc(floats=['rev', 'ph', 'sway'], colors=['Col'], vecs=['vel'])
+    acc = Acc(floats=['rev', 'ph', 'sway', 'bz'], colors=['Col'], vecs=['vel'])
     pal = [(0.05, 0.06, 0.08), (0.45, 0.1, 0.08), (0.12, 0.2, 0.35), (0.6, 0.58, 0.5), (0.08, 0.08, 0.08), (0.2, 0.32, 0.18), (0.7, 0.45, 0.1), (0.85, 0.85, 0.82)]
     V0, F0, G0 = _fig('man', False)
     for i in range(n):
@@ -279,13 +288,13 @@ def build_visitors(sc, coll, rng, n=170):
         c, s_ = math.cos(ang), math.sin(ang); R = np.array([[c, -s_, 0], [s_, c, 0], [0, 0, 1]]); sc_ = rng.uniform(0.92, 1.06)
         P = (V0 * sc_) @ R.T + np.array([x, y, z]); cloth = np.array(pal[rng.integers(0, len(pal))]) * rng.uniform(0.8, 1.1); skin = SKIN[rng.integers(0, len(SKIN))]
         colv = np.where((G0 == 0)[:, None], skin, np.where((G0 == 1)[:, None], cloth, np.array([0.04, 0.03, 0.03])))
-        vel = np.array([-s_ * sp, c * sp, 0.0]); acc.add(P, F0, rev=rng.uniform(0, 1), ph=rng.uniform(0, 6.28), sway=0.0, Col=np.concatenate([colv, np.ones((len(colv), 1))], 1), vel=vel)
-    ob = mesh_obj(sc, "Visitors_2026", acc, M.get('visitors'), coll); GN.add_mod(ob, GN.drift_group(), "Drift", T0=80.0); return ob
+        vel = np.array([-s_ * sp, c * sp, 0.0]); acc.add(P, F0, rev=rng.uniform(0, 1), bz=z - 0.4, ph=rng.uniform(0, 6.28), sway=0.0, Col=np.concatenate([colv, np.ones((len(colv), 1))], 1), vel=vel)
+    ob = mesh_obj(sc, "Visitors_2026", acc, M.get('visitors'), coll); GN.add_mod(ob, GN.drift_group(), "Drift", T0=80.0); GN.add_mod(ob, GN.grow_group(), "Grow", T=1.1); return ob
 
 # ------------------------------------------------------------------ city
 def building_set(sc, name, mat, coll, rng, spacing, jitter, prob, fw, fd, floors, fh, modern=True, exclusion=None, seed_bias=None, zrange=None, tanks=True):
     wallacc = Acc(floats=['rev', 'bz', 'isroof'], colors=['Col']); extra = Acc(floats=['rev', 'bz']); metal = Acc(floats=['rev', 'bz'])
-    pal = [(0.66, 0.57, 0.44), (0.72, 0.64, 0.5), (0.6, 0.5, 0.38), (0.78, 0.72, 0.62), (0.68, 0.5, 0.4), (0.55, 0.52, 0.48), (0.8, 0.77, 0.7)]
+    pal = [(0.5, 0.42, 0.31), (0.55, 0.47, 0.35), (0.45, 0.37, 0.27), (0.6, 0.54, 0.44), (0.52, 0.38, 0.3), (0.42, 0.4, 0.36), (0.62, 0.59, 0.52)]
     for gx in np.arange(-230, 231, spacing[0]):
         for gy in np.arange(-230, 231, spacing[1]):
             if rng.random() > prob: continue
@@ -356,7 +365,7 @@ def build_world(sc, quality=1.0):
     house = M.get('house'); modern = M.get('modern')
     W['ancient'] = building_set(sc, "Ancient_Houses", house, c_city, rng, (30, 27), 7, 0.7, (6.5, 10.5), (6, 9.5), (1, 2), 3.2, False, keep_out, tanks=False)
     W['mid'] = building_set(sc, "Medieval_Houses", house, c_city, rng, (17, 16), 4, 0.72, (6, 9.5), (6, 9), (1, 3), 3.0, False, keep_out, tanks=False)
-    W['modern'] = building_set(sc, "Modern_Amman", modern, c_city, rng, (11.5, 12.5), 2.2, 0.9, (7.5, 11.5), (7.5, 11), (3, 7), 3.1, True, keep_out)
+    W['modern'] = building_set(sc, "Modern_Amman", modern, c_city, rng, (11.5, 12.5), 2.2, 0.9, (7.5, 11.5), (7.5, 11), (2, 5), 3.1, True, keep_out)
     W['trees_pine'] = tree_set(sc, "Trees_Modern", c_env, rng, 380, 'pine', ((-200, 200), (-200, 200)), lambda x, y: keep_out(x, y) and not (abs(x) < 70 and -98 < y < -8 and abs(abs(x) - 60) > 6))
     W['trees_olive'] = tree_set(sc, "Trees_Ancient", c_env, rng, 420, 'olive', ((-220, 220), (-200, 220)), keep_out)
     W['trees_cypress'] = tree_set(sc, "Trees_Cypress", c_env, rng, 160, 'cypress', ((-200, 200), (-200, 200)), keep_out)

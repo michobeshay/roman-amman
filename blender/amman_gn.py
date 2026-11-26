@@ -23,7 +23,7 @@ def grow_group():
     bz = N.new('GeometryNodeInputNamedAttribute'); bz.data_type = 'FLOAT'; bz.inputs['Name'].default_value = 'bz'
     s = _M(ng, 'MULTIPLY', _M(ng, 'SUBTRACT', gi.outputs['T'], rev.outputs[0]), 14.0, clamp=True)
     one_minus = _M(ng, 'SUBTRACT', 1.0, s)
-    dz = _M(ng, 'MULTIPLY', one_minus, _M(ng, 'SUBTRACT', _M(ng, 'SUBTRACT', bz.outputs[0], sp.outputs['Z']), 0.35))
+    dz = _M(ng, 'MULTIPLY', one_minus, _M(ng, 'SUBTRACT', _M(ng, 'SUBTRACT', bz.outputs[0], sp.outputs['Z']), 40.0))
     cx = N.new('ShaderNodeCombineXYZ'); ng.links.new(dz, cx.inputs['Z'])
     st = N.new('GeometryNodeSetPosition'); ng.links.new(gi.outputs['Geometry'], st.inputs['Geometry']); ng.links.new(cx.outputs[0], st.inputs['Offset']); ng.links.new(st.outputs[0], go.inputs['Geometry'])
     return ng

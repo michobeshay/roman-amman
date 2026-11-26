@@ -53,7 +53,7 @@ def build_film(sc, quality=1.0):
     # --------------------------------------------------------------- world + render
     lib.setup_render(sc, res=(1080, 1920), samples=48, start=1, end=END)
     w = lib.sky(sc, elevation=24, rotation=SUN_ROT, strength=1.0, dust=2.0); sky = [n for n in w.node_tree.nodes if n.type == 'TEX_SKY'][0]
-    sc.view_settings.exposure = -0.55
+    sc.view_settings.exposure = -1.35
     kv_sky = lambda keys: [(sky.__setattr__('sun_rotation', math.radians(v)), sky.keyframe_insert('sun_rotation', frame=f)) for f, v in keys]
     kv_sky([(1, SUN_ROT), (1290, SUN_ROT), (1950, SUN_ROT + 380), (2100, SUN_ROT + 400), (3150, SUN_ROT + 405)])
     # --------------------------------------------------------------- state animation
@@ -80,17 +80,15 @@ def build_film(sc, quality=1.0):
     for o in W['colonnade']: GN.add_mod(o, GN.grow_group(), "Grow", T=0.0)
     grow(list(W['colonnade']), [(1, 0.0), (120, 0.0), (240, 1.1), (1500, 1.1), (1750, 0.0)])
     # crowd + visitors
-    pm = M.get('people'); fill = pm.node_tree.nodes[pm['fill_node']].outputs[0]
-    kv(fill, [(1, 0.0), (750, 0.0), (751, 0.0), (905, 1.05), (1291, 1.05), (1330, 0.0)])
-    vm = M.get('visitors'); vf = vm.node_tree.nodes[vm['fill_node']].outputs[0]
-    kv(vf, [(1, 1.05), (45, 1.05), (125, 0.0), (1960, 0.0), (2110, 1.05)])
+    grow(W['crowd'], [(1, 0.0), (750, 0.0), (751, 0.0), (905, 1.05), (1291, 1.05), (1330, 0.0)])
+    grow(W['visitors'], [(1, 1.05), (45, 1.05), (125, 0.0), (1960, 0.0), (2110, 1.05)])
     # --------------------------------------------------------------- cameras
     A = anchors(); cams = {}
     cx0 = (0, 0)
     cams['C1'] = make_cam(sc, "Cam_S1_Aerial", [(1, (60, -310, 235)), (240, (20, -122, 68))], [(1, (0, 25, 10)), (240, (0, 6, 12))], lens=28, fstop=16, start=1)
     pos = [(241 + i * 14, arc_pos((0, -5), 24 - 58 * (i / 9), 140 - 36 * (i / 9), 76 - 28 * (i / 9))) for i in range(10)]
     cams['C2a'] = make_cam(sc, "Cam_S2_AerialOrbit", pos, [(241, (0, 5, 12)), (370, (0, 6, 11))], lens=32, fstop=16, start=241)
-    cams['C2b'] = make_cam(sc, "Cam_S2_Frontal", [(371, (0, -108, 34)), (480, (0, -70, 22))], [(371, (0, 2, 10)), (480, (0, 2, 10))], lens=32, fstop=11, start=371)
+    cams['C2b'] = make_cam(sc, "Cam_S2_Frontal", [(371, (0, -125, 78)), (480, (0, -75, 50))], [(371, (0, 6, 8)), (480, (0, 6, 6))], lens=32, fstop=11, start=371)
     th0, th1, rr = 72, 90, 23.4; zf = float(B.cavea_floor(rr)) + 0.55
     cams['C2c'] = make_cam(sc, "Cam_S2_StoneCloseup", [(481, (rr * math.cos(math.radians(th0)), rr * math.sin(math.radians(th0)), zf)), (580, (rr * math.cos(math.radians(th1)), rr * math.sin(math.radians(th1)), zf + 0.05))],
                            [(481, (20.5 * math.cos(math.radians(th0 + 4)), 20.5 * math.sin(math.radians(th0 + 4)), float(B.cavea_floor(20.5)) + 0.25)), (580, (20.5 * math.cos(math.radians(th1 + 4)), 20.5 * math.sin(math.radians(th1 + 4)), float(B.cavea_floor(20.5)) + 0.25))], lens=55, fstop=2.2, dof=True, start=481)
@@ -99,8 +97,8 @@ def build_film(sc, quality=1.0):
     cams['C3b'] = make_cam(sc, "Cam_S3_Tracking", [(901, (-11, 2.0, 3.1)), (1050, (11, 3.0, 3.3))], [(901, (-2, 28, 11)), (1050, (2, 28, 11))], lens=30, fstop=5.6, dof=True, start=901)
     cams['C3c'] = make_cam(sc, "Cam_S3_Actors", [(1051, (7.5, 9.5, 3.6)), (1170, (5.0, 8.0, 3.2))], [(1051, (-1, -4.8, 3.0)), (1170, (-1, -4.8, 3.0))], lens=42, fstop=3.2, dof=True, start=1051)
     cams['C3d'] = make_cam(sc, "Cam_S3_Crane", [(1171, (0, 8, 4)), (1290, (0, -62, 52))], [(1171, (0, 24, 10)), (1290, (0, 18, 9))], lens=26, fstop=11, start=1171)
-    cams['C4'] = make_cam(sc, "Cam_S4_TimeLapse", [(1291, (0, -70, 22)), (1950, (11, -68, 23.5))], [(1291, (0, 2, 10)), (1950, (0, 2, 10))], lens=32, fstop=11, start=1291)
-    cams['C5a'] = make_cam(sc, "Cam_S5_SameAngle", [(1951, (11, -68, 23.5)), (2100, (0, -70, 22))], [(1951, (0, 2, 10)), (2100, (0, 2, 10))], lens=32, fstop=11, start=1951)
+    cams['C4'] = make_cam(sc, "Cam_S4_TimeLapse", [(1291, (0, -75, 50)), (1950, (11, -73, 51.5))], [(1291, (0, 6, 6)), (1950, (0, 6, 6))], lens=32, fstop=11, start=1291)
+    cams['C5a'] = make_cam(sc, "Cam_S5_SameAngle", [(1951, (11, -73, 51.5)), (2100, (0, -75, 50))], [(1951, (0, 6, 6)), (2100, (0, 6, 6))], lens=32, fstop=11, start=1951)
     cams['C5b'] = make_cam(sc, "Cam_S5_Seating", [(2101, (-4, 3.5, 2.0)), (2250, (3, 2.5, 2.3))], [(2101, (0, 26, 11)), (2250, (0, 26, 11.5))], lens=30, fstop=4.0, dof=True, start=2101)
     cams['C5c'] = make_cam(sc, "Cam_S5_Plaza", [(2251, (-44, -42, 3.0)), (2450, (-22, -48, 3.2))], [(2251, (8, -4, 8)), (2450, (4, -2, 8))], lens=32, fstop=5.6, dof=True, start=2251)
     cams['C5d'] = make_cam(sc, "Cam_S5_FromTop", [(2451, (-12, 32, 18)), (2700, (12, 34, 19))], [(2451, (0, -100, 6)), (2700, (-6, -100, 7))], lens=24, fstop=11, start=2451)
