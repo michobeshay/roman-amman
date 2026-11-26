@@ -134,7 +134,7 @@ def _terrain():
     scrub = _n(nt, 'ShaderNodeMix', (-650, 300), data_type='RGBA'); scrub.inputs[7].default_value = (0.17, 0.15, 0.065, 1); nt.links.new(n2.outputs['Fac'], scrub.inputs[0]); nt.links.new(earth.outputs[0], scrub.inputs[6])
     pl = _n(nt, 'ShaderNodeAttribute', (-1150, -300), attribute_name='plaza', attribute_type='GEOMETRY'); rd = _n(nt, 'ShaderNodeAttribute', (-1150, -450), attribute_name='road', attribute_type='GEOMETRY')
     mo = _val(nt, 'Modern', 0.0, (-1150, -600))
-    slab = _n(nt, 'ShaderNodeTexBrick', (-900, -300)); slab.inputs['Scale'].default_value = 0.25; slab.inputs['Mortar Size'].default_value = 0.012; slab.inputs['Color1'].default_value = (0.42, 0.34, 0.24, 1); slab.inputs['Color2'].default_value = (0.37, 0.3, 0.21, 1); slab.inputs['Mortar'].default_value = (0.2, 0.17, 0.13, 1)
+    slab = _n(nt, 'ShaderNodeTexBrick', (-900, -300)); slab.inputs['Scale'].default_value = 0.25; slab.inputs['Mortar Size'].default_value = 0.012; slab.inputs['Color1'].default_value = (0.24, 0.19, 0.13, 1); slab.inputs['Color2'].default_value = (0.21, 0.17, 0.115, 1); slab.inputs['Mortar'].default_value = (0.2, 0.17, 0.13, 1)
     nt.links.new(tc.outputs['Object'], slab.inputs['Vector'])
     p1 = _n(nt, 'ShaderNodeMix', (-450, 100), data_type='RGBA'); nt.links.new(pl.outputs['Fac'], p1.inputs[0]); nt.links.new(scrub.outputs[2], p1.inputs[6]); nt.links.new(slab.outputs['Color'], p1.inputs[7])
     rm = _n(nt, 'ShaderNodeMath', (-700, -500), operation='MULTIPLY'); nt.links.new(rd.outputs['Fac'], rm.inputs[0]); nt.links.new(mo.outputs[0], rm.inputs[1])
