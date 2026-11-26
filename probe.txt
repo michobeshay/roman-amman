@@ -1,0 +1,16 @@
+PROBE nproc 4
+PROBE mem 15 GB
+PROBE disk 91G free of 145G
+PROBE gpu: tools/probe.sh: line 4: nvidia-smi: command not found
+PROBE pci: 00:01.3 Non-VGA unclassified device: Intel Corporation 82371AB/EB/MB PIIX4 ACPI (rev 08)
+00:03.0 VGA compatible controller: Amazon.com, Inc. Device 1111
+PROBE cpu: Intel(R) Xeon(R) 6975P-C
+PROBE blender_download ok 1s size 357M
+Blender 5.0.1
+	build date: 2025-12-16
+PROBE denoisers []
+PROBE engines ['BLENDER_EEVEE']
+PROBE devices OPTIX []
+PROBE devices CUDA []
+PROBE denoise_ok True
+PROBE colab_reach 200
