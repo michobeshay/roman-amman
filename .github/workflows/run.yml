@@ -1,0 +1,31 @@
+name: run
+on:
+  workflow_dispatch:
+    inputs:
+      cmd:
+        description: "shell command (cwd = repo root)"
+        required: true
+      tag:
+        description: "output branch suffix"
+        default: dev
+permissions:
+  contents: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run
+        run: ${{ github.event.inputs.cmd }}
+      - name: Publish out/ to branch
+        if: always()
+        run: |
+          [ -d out ] || exit 0
+          git config user.name "render-bot"; git config user.email "bot@users.noreply.github.com"
+          rm -rf /tmp/keep && mkdir /tmp/keep && cp -r out/. /tmp/keep/
+          git checkout --orphan out-${{ github.event.inputs.tag }}
+          git rm -rf --cached . >/dev/null 2>&1 || true
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -r /tmp/keep/. .
+          git add -A && git commit -qm "out ${{ github.event.inputs.tag }}" && git push -f origin out-${{ github.event.inputs.tag }}
