@@ -30,7 +30,7 @@ def tts():
         wav = p[:-4] + '.wav'; subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', p, '-ar', str(SR), '-ac', '1', wav], check=True)
         _, d = wavfile.read(wav); d = d.astype(np.float32) / 32768; i = int(s * SR); L = min(len(d), n - i); vo[i:i + L] += d[:L]
     return True
-has_vo = tts(); print("narration:", "edge-tts ar-JO" if has_vo else "NONE (silent bed only; provide recording)")
+has_vo = False if os.environ.get('NO_VO') == '1' else tts(); print("narration:", "edge-tts ar-JO" if has_vo else "NONE (background sound only)")
 duck = np.convolve((np.abs(vo) > .02).astype(float), np.ones(SR // 2) / (SR // 2), 'same'); duck = 1 - .55 * np.clip(duck * 3, 0, 1)
 mix = bed * duck + vo * 1.1; mix = mix / max(1, np.abs(mix).max() / .9)
 fade = np.minimum(1, np.minimum(t / 1.5, (DUR - t) / 3)); mix *= fade
