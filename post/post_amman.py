@@ -20,6 +20,13 @@ def put(d, xy, t, f, fill, anchor='ma'):
 def ease(t): t = min(max(t, 0), 1); return t * t * (3 - 2 * t)
 def layer(draw_fn):
     im = Image.new('RGBA', (W, H), (0, 0, 0, 0)); draw_fn(ImageDraw.Draw(im)); return im
+def wrap(d, t, f, maxw):
+    lines, cur = [], ""
+    for w in t.split():
+        c = (cur + " " + w).strip()
+        if tl(d, c, f) <= maxw or not cur: cur = c
+        else: lines.append(cur); cur = w
+    return lines + [cur]
 def fit(d, t, maxw, sz):
     while sz > 40 and tl(d, t, font(sz)) > maxw: sz -= 4
     return font(sz)
@@ -32,15 +39,19 @@ def comp(x, im, op):
 def title_layer(kind, lines):
     def f(d):
         if kind == 'title':
-            for k, ln in enumerate(lines): put(d, (W / 2, 250 + k * 150), ln, fit(d, ln, 960, 96), (255, 255, 255, 255))
-            d.rectangle([W / 2 - 60, 250 + 150 * len(lines) - 10, W / 2 + 60, 250 + 150 * len(lines) - 4], fill=(255, 196, 60, 255))
+            fo = font(88); ls = [x for ln in lines for x in wrap(d, ln, fo, 900)]; y = 250
+            for ln in ls: put(d, (W / 2, y), ln, fo, (255, 255, 255, 255)); y += 130
+            d.rectangle([W / 2 - 60, y + 10, W / 2 + 60, y + 16], fill=(255, 196, 60, 255))
         else:
-            put(d, (W / 2, 640), lines[0], fit(d, lines[0], 960, 84), (255, 255, 255, 255))
-            put(d, (W / 2, 800), lines[1], fit(d, lines[1], 960, 100), (255, 214, 120, 255))
+            y = 560
+            for k, ln in enumerate(lines):
+                fo = font(84 if k == 0 else 100)
+                for x in wrap(d, ln, fo, 900): put(d, (W / 2, y), x, fo, (255, 255, 255, 255) if k == 0 else (255, 214, 120, 255)); y += 130
+                y += 30
     return layer(f)
 def label_layer(t, px, py):
     def f(d):
-        fo = font(46); w = tl(d, t, fo); x, y = int(px * W), int(py * H)
+        fo = font(46); w = min(tl(d, t, fo), 800); x, y = int(px * W), int(py * H)
         y2 = max(y - 150, 330); xl = min(max(x, 140 + w / 2), W - 140 - w / 2)
         d.rounded_rectangle([xl - w / 2 - 26, y2 - 12, xl + w / 2 + 26, y2 + 78], 22, fill=(10, 10, 10, 190))
         put(d, (xl, y2), t, fo, (255, 255, 255, 255)); d.line([xl, y2 + 78, x, y], fill=(255, 196, 60, 255), width=4)
@@ -48,14 +59,15 @@ def label_layer(t, px, py):
     return layer(f)
 def sub_layer(t):
     def f(d):
-        fo = fit(d, t, 940, 54); put(d, (W / 2, 1500), t, fo, (255, 255, 255, 255))
+        fo = font(52); ls = wrap(d, t, fo, 900); y = 1560 - 78 * len(ls)
+        for ln in ls: put(d, (W / 2, y), ln, fo, (255, 255, 255, 255)); y += 78
     return layer(f)
 def timeline_layer(active):
     def f(d):
-        y = 1640; d.line([140, y, W - 140, y], fill=(255, 255, 255, 180), width=4); xs = [W - 190, W / 2, 190]
+        y = 1640; d.line([140, y, W - 140, y], fill=(255, 255, 255, 180), width=4); xs = [W - 260, W / 2, 260]
         for k, ((_, t), x) in enumerate(zip(TIMELINE, xs)):
             on = k <= active; d.ellipse([x - 16, y - 16, x + 16, y + 16], fill=(255, 196, 60, 255) if on else (255, 255, 255, 120))
-            put(d, (x, y + 34), t, font(36), (255, 255, 255, 255 if on else 120))
+            put(d, (x, y + 34), t, font(34), (255, 255, 255, 255 if on else 120))
     return layer(f)
 def main():
     fr, out, audio, labj = sys.argv[1:5]; limit = int(sys.argv[sys.argv.index('--limit') + 1]) if '--limit' in sys.argv else N
